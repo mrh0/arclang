@@ -9,6 +9,7 @@ public enum TokenType {
 	SEP,
 	OP,
 	OP_KW,
+	OP_SHORT,
 	END,
 	LN,
 	BLOCK,

@@ -49,7 +49,7 @@ public class Token implements IToken {
 	}
 	
 	public boolean isBlockEnd() {
-		return label.equals("end");
+		return label.equals("end");// || label.equals("else");
 	}
 	
 	public boolean isOpenBracket() {

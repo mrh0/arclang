@@ -6,7 +6,7 @@ import com.mrh0.arclang.util.StringUtil;
 
 public class Statement implements IStatement {
 	private IToken[] tokens;
-	private int line = -1;
+	public final int line;
 	
 	public Statement(List<IToken> tokens, int line) {
 		this.tokens = tokens.toArray(new IToken[0]);

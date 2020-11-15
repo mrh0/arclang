@@ -38,4 +38,9 @@ public class TString implements IVal{
 	public String toString() {
 		return value;
 	}
+	
+	@Override
+	public boolean booleanValue() {
+		return value.length() > 0;
+	}
 }

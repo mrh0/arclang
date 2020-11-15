@@ -15,6 +15,7 @@ public class Statementizer {
 	private List<Token> t;
 	private int line = 1;
 	private int i = 0;
+	@SuppressWarnings("unused")
 	private VM vm;
 	
 	public Statementizer(VM vm, List<Token> tokens) {
@@ -27,6 +28,7 @@ public class Statementizer {
 	public StatementBlock Statementize() throws ArcException {
 		List<IStatement> r = new ArrayList<IStatement>();
 		List<IToken> sl = new ArrayList<IToken>();
+		//boolean hasEndedBlock = false;
 		while(i < t.size()) {
 			Token token = t.get(i++);
 			if(token.isStatementEnd()) {

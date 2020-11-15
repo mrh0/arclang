@@ -14,10 +14,10 @@ public class Tokenizer {
 	private StringBuilder s = new StringBuilder();
 	// Token list.
 	private ArrayList<Token> l = new ArrayList<Token>();
+	
 	// Postfix list.
-	private ArrayList<Token> p = new ArrayList<Token>();
-	// Postfix stack.
-	private Stack<Token> op = new Stack<Token>();
+	List<Token> postfix = new ArrayList<Token>();
+	
 	private final VM vm;
 	
 	public Tokenizer(VM vm) {
@@ -33,9 +33,10 @@ public class Tokenizer {
 		
 		vm.exceptionManager.setPhase(ExecutionPhase.POSTFIXIFY);
 		System.out.println(l);
-		postfixify();
-		System.out.println(p);
-		return p;
+		postfix = postfixify(0, null);
+		cleanup();
+		System.out.println(postfix);
+		return postfix;
 	}
 	
 	/* Tokenize step #1.
@@ -152,7 +153,7 @@ public class Tokenizer {
 	
 	
 	/* Determines if a completed token should change type. */
-	private TokenType finalCheck(String token, TokenType type) {
+	private TokenType firstCheck(String token, TokenType type) {
 		if(type == TokenType.IDENT) {
 			if(Tokens.isIdentOp(token))
 				return TokenType.OP;
@@ -180,7 +181,7 @@ public class Tokenizer {
 		String r = s.toString();
 		s = new StringBuilder();
 		
-		t = finalCheck(r, t);
+		t = firstCheck(r, t);
 		
 		l.add(new Token(r, t));
 		
@@ -189,8 +190,20 @@ public class Tokenizer {
 	
 	/* Tokenize step #3.
 	 * Transforms array of tokens into postfix order. */
-	public void postfixify() {
-		for(Token t : l) {
+	public List<Token> postfixify(int start, Token escape) {
+		// Postfix list.
+		ArrayList<Token> p = new ArrayList<Token>();
+		// Postfix stack.
+		Stack<Token> op = new Stack<Token>();
+		
+		for(int i = start;i < l.size(); i++) {
+			Token t = l.get(i);
+			if(escape != null && t.type == escape.type && t.label.equals(escape.label)) {
+				while(!op.isEmpty())
+					p.add(op.pop());
+				p.add(t);
+				return p;
+			}
 			if(t.isIdentifier() || t.isNumber() || t.isString())
 				p.add(t);
 			else if(t.isOpenBracket())
@@ -211,6 +224,14 @@ public class Tokenizer {
 				p.add(t);
 			}
 			else if(t.isSeparator()) {
+				if(t.label.equals("[")) {
+					p.add(t);
+					List<Token> rp = postfixify(i+1, new Token("]",TokenType.SEP));
+					p.addAll(rp);
+					i+=rp.size();
+					continue;
+				}
+				
 				while(!op.isEmpty())
 					p.add(op.pop());
 				p.add(t);
@@ -224,5 +245,38 @@ public class Tokenizer {
 		}
 		while(!op.isEmpty())
 			p.add(op.pop());
+		return p;
+	}
+	
+	/* Tokenize step #4
+	 * Final pass. */
+	public void cleanup() {
+		for(int i = 0; i < postfix.size(); i++) {
+			IToken t = postfix.get(i);
+			TokenType type = finalCheck(t);
+			if(t.getType() != type)
+				postfix.set(i, new Token(t.getLabel(), type));
+			if(t.getLabel().equals("else")) {
+				postfix.add(i++, new Token("end", TokenType.IDENT));
+				postfix.add(i++, new Token(";", TokenType.END));
+			}
+		}
+	}
+	
+	/* Determines if a completed token should change type again. */
+	private TokenType finalCheck(IToken t) {
+		if(t.getType() == TokenType.OP) {
+			switch(t.getLabel()) {
+				case "!":
+					return TokenType.OP_SHORT;
+				case "not":
+					return TokenType.OP_SHORT;
+				case "~":
+					return TokenType.OP_SHORT;
+			}
+		}
+		else if(t.getType() == TokenType.OP_KW)
+			return TokenType.KW;
+		return t.getType();
 	}
 }

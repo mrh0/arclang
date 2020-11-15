@@ -173,6 +173,20 @@ public class Tokens {
 				return TString.create(t.getLabel());
 			case VAL:
 				return ((TokenVal)t).getValue();
+			case IDENT:
+				switch(t.getLabel()) {
+					case "true":
+						return TNumber.create(true);
+					case "false":
+						return TNumber.create(false);
+					case "undefined":
+						return TUndefined.getInstance();
+					case "null":
+						return TUndefined.getInstance();
+				}
+				return null;
+			default:
+				break;
 		}
 		return null;
 	}

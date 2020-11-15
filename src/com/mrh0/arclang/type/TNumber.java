@@ -69,6 +69,34 @@ public class TNumber implements IVal{
 	public IVal add(IVal v) throws ArcException {
 		if(v instanceof TNumber)
 			return TNumber.create(value + from(v).get());
+		if(v instanceof TString)
+			return TString.create(value + TString.from(v).getValue());
 		return TUndefined.getInstance();
+	}
+	
+	@Override
+	public IVal sub(IVal v) throws ArcException {
+		if(v instanceof TNumber)
+			return TNumber.create(value - from(v).get());
+		return TUndefined.getInstance();
+	}
+	
+	@Override
+	public IVal mul(IVal v) throws ArcException {
+		if(v instanceof TNumber)
+			return TNumber.create(value * from(v).get());
+		return TUndefined.getInstance();
+	}
+	
+	@Override
+	public IVal div(IVal v) throws ArcException {
+		if(v instanceof TNumber)
+			return TNumber.create(value / from(v).get());
+		return TUndefined.getInstance();
+	}
+	
+	@Override
+	public boolean booleanValue() {
+		return value > 0;
 	}
 }

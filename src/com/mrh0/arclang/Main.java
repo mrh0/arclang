@@ -23,6 +23,7 @@ public class Main {
 			BufferedReader br = new BufferedReader(fr);
 			while(br.ready())
 				r += br.readLine()+"\n";
+			br.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
