@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.ExceptionManager.ExecutionPhase;
+import com.mrh0.arclang.exception.UnexpectedSymbolException;
+import com.mrh0.arclang.util.StringUtil;
 import com.mrh0.arclang.vm.VM;
 
 public class Tokenizer {
@@ -14,9 +17,10 @@ public class Tokenizer {
 	private StringBuilder s = new StringBuilder();
 	// Token list.
 	private ArrayList<Token> l = new ArrayList<Token>();
-	
 	// Postfix list.
-	List<Token> postfix = new ArrayList<Token>();
+	private List<Token> postfix = new ArrayList<Token>();
+	
+	private List<Integer> lineIndecies = new ArrayList<Integer>();
 	
 	private final VM vm;
 	
@@ -24,14 +28,16 @@ public class Tokenizer {
 		this.vm = vm;
 	}
 	
-	public List<Token> tokenize(String code) {
+	public List<Token> tokenize(String code) throws ArcException {
 		vm.exceptionManager.setPhase(ExecutionPhase.PARSE);
+		vm.exceptionManager.setCode(code, lineIndecies);
 		code = preprocess(code);
 		
 		for(int i = 0; i < code.length(); i++)
 			classify(code.charAt(i));
 		
 		vm.exceptionManager.setPhase(ExecutionPhase.POSTFIXIFY);
+		blockEndCheck();
 		System.out.println(l);
 		postfix = postfixify(0, null);
 		cleanup();
@@ -48,10 +54,16 @@ public class Tokenizer {
 		boolean inLineComment = false;
 		boolean inBlockComment = false;
 		
+		lineIndecies.add(0);
+		
 		for(int i = 1; i < code.length(); i++) {
 			char c0 = code.charAt(i-1);
 			char c1 = code.charAt(i);
 			String ob = (""+c0)+c1;
+			
+			if(Tokens.isLineEnd(c0))
+				lineIndecies.add(i);
+
 			
 			if(ob.equals(Tokens.getLineComment()) && !inBlockComment)
 				inLineComment = true;
@@ -75,7 +87,6 @@ public class Tokenizer {
 					s.append(c0);
 				continue;
 			}
-			
 			s.append(c0);
 		}
 		return s.toString();
@@ -102,7 +113,7 @@ public class Tokenizer {
 		}
 		else if(Tokens.isDefiniteEnd(c)) {
 			end();
-			push(TokenType.END, ';');
+			push(TokenType.D_END, ';');
 			end();
 			return;
 		}
@@ -121,6 +132,14 @@ public class Tokenizer {
 			return;
 		}
 		else if(Tokens.isSep(c)) {
+			if(c == '[') {
+				if(t == TokenType.IDENT) {
+					end();
+					push(TokenType.OP, '#');
+					end();
+				}
+			}
+					
 			end();
 			push(TokenType.SEP, c);
 			end();
@@ -163,6 +182,16 @@ public class Tokenizer {
 		return type;
 	}
 	
+	private void blockEndCheck() {
+		for(int i = 0; i < l.size(); i++) {
+			IToken t = l.get(i);
+			if(t.getLabel().equals("else") || t.getLabel().equals("elseif")) {
+				l.add(i++, new Token("end", TokenType.IDENT));
+				l.add(i++, new Token(";", TokenType.END));
+			}
+		}
+	}
+	
 	/* Add char and sets type to current token. */
 	private void push(TokenType t, char c) {
 		this.t = t;
@@ -176,7 +205,7 @@ public class Tokenizer {
 	
 	/* End current token. */
 	private void end() {
-		if(s.length() == 0)
+		if(s.length() == 0 && t != TokenType.STR)
 			return;
 		String r = s.toString();
 		s = new StringBuilder();
@@ -188,17 +217,23 @@ public class Tokenizer {
 		t = TokenType.NONE;
 	}
 	
+	private Stack<Token> brackStack = new Stack<Token>();
+	
 	/* Tokenize step #3.
 	 * Transforms array of tokens into postfix order. */
-	public List<Token> postfixify(int start, Token escape) {
+	public List<Token> postfixify(int start, Token escape) throws ArcException {
 		// Postfix list.
 		ArrayList<Token> p = new ArrayList<Token>();
 		// Postfix stack.
 		Stack<Token> op = new Stack<Token>();
 		
+		int line = 1;
+		
 		for(int i = start;i < l.size(); i++) {
 			Token t = l.get(i);
+			//Checks for the escape token.
 			if(escape != null && t.type == escape.type && t.label.equals(escape.label)) {
+				bracketCheck(t);
 				while(!op.isEmpty())
 					p.add(op.pop());
 				p.add(t);
@@ -206,24 +241,41 @@ public class Tokenizer {
 			}
 			if(t.isIdentifier() || t.isNumber() || t.isString())
 				p.add(t);
-			else if(t.isOpenBracket())
-				op.push(t);
-			else if(t.isCloseBracket()) {
-				Token top = op.pop();
-				while(!top.isOpenBracket()) {
-					p.add(top);
-					top = op.pop();
-				}
-			}
+			//Bracket before
 			else if(t.isLnEnd()) {
 				p.add(new Token("\n", TokenType.LN));
+				line++;
+				vm.exceptionManager.currentLine = line;
 			}
 			else if(t.isStatementEnd() || t.isBlock()) {
+				if(t.type == TokenType.D_END && brackStack.size() > 0) {
+					throw new UnexpectedSymbolException("end of statement.");
+				}
+				else if(t.type == TokenType.END && brackStack.size() > 0) {
+					continue;
+				}
 				while(!op.isEmpty())
 					p.add(op.pop());
 				p.add(t);
 			}
 			else if(t.isSeparator()) {
+				//Handles array/accessor blocks (also object blocks later).
+				
+				bracketCheck(t);
+				
+				if(t.isOpenBracket()) {
+					op.push(t);
+					continue;
+				}
+				else if(t.isCloseBracket()) {
+					Token top = op.pop();
+					while(!top.isOpenBracket()) {
+						p.add(top);
+						top = op.pop();
+					}
+					continue;
+				}
+				
 				if(t.label.equals("[")) {
 					p.add(t);
 					List<Token> rp = postfixify(i+1, new Token("]",TokenType.SEP));
@@ -248,17 +300,38 @@ public class Tokenizer {
 		return p;
 	}
 	
+	private void bracketCheck(Token t) throws ArcException {
+		if(t.isAnyOpenBracket()) {
+			brackStack.push(t);
+		}
+		else if(t.isAnyCloseBracket()) {
+			char opener = Tokens.getOpener(t.label.charAt(0));
+			if(brackStack.isEmpty()) {
+				throw new ArcException("[DEV] brackets unbalanced no open bracket for '"+t.label.charAt(0)+"'.");
+			}
+			char tbc = brackStack.pop().label.charAt(0);
+			
+			if(opener != tbc) {
+				throw new ArcException("[DEV] brackets unbalanced expected: '"+Tokens.getCloser(tbc)+"' got '"+tbc+"'.");
+			}
+		}
+	}
+	
 	/* Tokenize step #4
 	 * Final pass. */
-	public void cleanup() {
+	public void cleanup() throws UnexpectedSymbolException {
 		for(int i = 0; i < postfix.size(); i++) {
 			IToken t = postfix.get(i);
 			TokenType type = finalCheck(t);
 			if(t.getType() != type)
 				postfix.set(i, new Token(t.getLabel(), type));
-			if(t.getLabel().equals("else")) {
-				postfix.add(i++, new Token("end", TokenType.IDENT));
-				postfix.add(i++, new Token(";", TokenType.END));
+			if(t.getLabel().equals("func")) {
+				if(i-1 < 0)
+					throw new UnexpectedSymbolException(t);
+				if(postfix.get(i-1).getLabel().equals("#")) {
+					postfix.remove(i-1);
+					i++;
+				}
 			}
 		}
 	}

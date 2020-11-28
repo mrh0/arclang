@@ -30,6 +30,7 @@ public class TNumber implements IVal{
 	}
 	
 	public static TNumber from(IVal v) throws ArcException {
+		v = IVal.get(v);
 		if(!(v instanceof TNumber))
 			throw new CastException(v, "number");
 		return (TNumber) v;
@@ -98,5 +99,10 @@ public class TNumber implements IVal{
 	@Override
 	public boolean booleanValue() {
 		return value > 0;
+	}
+	
+	@Override
+	public boolean isNumber() {
+		return true;
 	}
 }

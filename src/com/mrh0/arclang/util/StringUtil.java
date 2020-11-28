@@ -52,4 +52,12 @@ public class StringUtil {
 	public static String arrayToString(Object[] arr) {
 		return arrayToString("", arr, "", ", ");
 	}
+	
+	public static String push(String s, char c) {
+		return s+c;
+	}
+	
+	public static String pop(String s) {
+		return s.substring(s.length()-1);
+	}
 }

@@ -1,45 +1,44 @@
 package com.mrh0.arclang.service;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import com.mrh0.arclang.service.route.RouteClient;
+
 public class WebServer {
-	public static void server(int port) {
+	IWebService ws;
+	
+	public void serve(int port, IWebService ws) {
 		ServerSocket s;
+		this.ws = ws;
 		try {
 			s = new ServerSocket(80);
 			while(true) {
 				Socket client = s.accept();
-				new Thread(() -> clientHandler(client)).start(); 
+				new Thread(() -> {
+					try {
+						clientHandler(client);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}).start(); 
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private static void clientHandler(Socket c) {
-		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream()));
-	    	StringBuilder result = new StringBuilder();
-	    	
-	    	String data = " ";
-	    	while(data.length() > 0 && (data = in.readLine()) != null) {
-	    		result.append(data+"\r\n");
-			}
-	    	
-	    	String r = result.toString();
-			
+	private void clientHandler(Socket c) throws Exception {
+		System.out.println("Connected");
+		ws.spawnClient(c);
+		/*try {
 			String output = "";
-			
 			byte[] content = output.getBytes();
-			
 			c.getOutputStream().write("HTTP/1.1 200 OK\r\n".getBytes());
-			c.getOutputStream().write("Server: hulind HTTP\r\n".getBytes());
+			c.getOutputStream().write("Server: arclang HTTP\r\n".getBytes());
 			c.getOutputStream().write("Content-Type: text/html\r\n".getBytes());
 			//c.getOutputStream().write(("Set-Cookie: session="+session+"\r\n").getBytes());
 			c.getOutputStream().write(("Content-Length: " + content.length + "\r\n\r\n").getBytes());
@@ -51,16 +50,8 @@ public class WebServer {
 			in.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
-	
-	public static void send(Socket c, String message) throws IOException {
-		BufferedWriter out = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
-		out.write(message);
-		out.newLine();
-		out.flush();
-	}
-	
 	/*private static int SESSION_KEY_LENGTH = 10;
 	private static final String chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	private static Random random = new Random();

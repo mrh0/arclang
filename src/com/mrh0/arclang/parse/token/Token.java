@@ -37,7 +37,7 @@ public class Token implements IToken {
 	}
 	
 	public boolean isStatementEnd() {
-		return type == TokenType.END;
+		return type == TokenType.END || type == TokenType.D_END;
 	}
 	
 	public boolean isLnEnd() {
@@ -50,6 +50,14 @@ public class Token implements IToken {
 	
 	public boolean isBlockEnd() {
 		return label.equals("end");// || label.equals("else");
+	}
+	
+	public boolean isAnyOpenBracket() {
+		return isOpenBracket() || isOpenAccessorBracket() || isOpenObjectBracket();
+	}
+	
+	public boolean isAnyCloseBracket() {
+		return isCloseBracket() || isCloseAccessorBracket() || isCloseObjectBracket();
 	}
 	
 	public boolean isOpenBracket() {
@@ -74,6 +82,10 @@ public class Token implements IToken {
 	
 	public boolean isCloseObjectBracket() {
 		return label.equals("}");
+	}
+	
+	public boolean isComma() {
+		return label.equals(",");
 	}
 
 	@Override

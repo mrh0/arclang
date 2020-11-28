@@ -7,16 +7,8 @@ import com.mrh0.arclang.type.TString;
 import com.mrh0.arclang.type.TUndefined;
 
 public class Tokens {
-	private static String[] opKws = {
-		"out", "error", "log", "assert", "if", "else", "while", "iter"
-	};
-	
 	public static boolean isWhitespace(char c) {
 		return c == ' ' || c == '\t';
-	}
-	
-	public static boolean isEnd(char c) {
-		return isDefiniteEnd(c) || isLineEnd(c);
 	}
 	
 	public static boolean isDefiniteEnd(char c) {
@@ -25,6 +17,10 @@ public class Tokens {
 	
 	public static boolean isLineEnd(char c) {
 		return c == '\n' || c == '\r';
+	}
+	
+	public static boolean isEnd(char c) {
+		return isDefiniteEnd(c) || isLineEnd(c);
 	}
 	
 	public static boolean isBlock(char c) {
@@ -39,14 +35,39 @@ public class Tokens {
 		return c == ',' || c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
 	}
 	
-	public static boolean isOpKeyword(String ident) {
-		for(String s : opKws) {
-			if(ident.equals(s))
-				return true;
-		}
-		return false;
+	public static boolean isOpenBracket(char c) {
+		return c == '(' || c == '[' || c == '{';
 	}
 	
+	public static boolean isCloseBracket(char c) {
+		return c == ')' || c == ']' || c == '}';
+	}
+	
+	public static char getOpener(char c) {
+		switch(c) {
+			case ')':
+				return '(';
+			case ']':
+				return '[';
+			case '}':
+				return '{';
+		}
+		return '\0';
+	}
+	
+	public static char getCloser(char c) {
+		switch(c) {
+			case '(':
+				return ')';
+			case '[':
+				return ']';
+			case '{':
+				return '}';
+		}
+		return '\0';
+	}
+	
+	//Comments
 	public static String getLineComment() {
 		return "//";
 	}
@@ -59,6 +80,42 @@ public class Tokens {
 		return "*/";
 	}
 	
+	//Keywords that should be sorted as operators.
+	public static boolean isOpKeyword(String ident) {
+		switch(ident) {
+			case "out":
+				return true;
+			case "error":
+				return true;
+			case "log":
+				return true;
+			case "assert":
+				return true;
+			case "bench":
+				return true;
+				
+			case "if":
+				return true;
+			case "else":
+				return true;
+			case "elseif":
+				return true;
+			case "while":
+				return true;
+			case "iter":
+				return true;
+			case "func":
+				return true;
+				
+			case "route":
+				return true;
+			case "header":
+				return true;
+		}
+		return false;
+	}
+	
+	//Symbols that make up a operator.
 	public static boolean isOp(char c) {
 		switch(c) {
 			case '+':
@@ -81,10 +138,13 @@ public class Tokens {
 				return true;
 			case '!':
 				return true;
+			case '#':
+				return true;
 		}
 		return false;
 	}
 	
+	//Identifiers that should be treated as an operator.
 	public static boolean isIdentOp(String id) {
 		switch(id) {
 			case "and":
@@ -103,12 +163,16 @@ public class Tokens {
 		return false;
 	}
 	
+	//Get the sorted order value of a operator.
 	public static int opValue(Token t) {
 		if(t.type == TokenType.OP_KW)
 			return -10000;
 		switch(t.label) {
 			case "(":
 				return -1000;
+				
+			case "#":
+				return 100;
 				
 			case "!":
 				return 11;
@@ -183,6 +247,19 @@ public class Tokens {
 						return TUndefined.getInstance();
 					case "null":
 						return TUndefined.getInstance();
+					case "GET":
+						return TString.create("GET");
+					case "POST":
+						return TString.create("POST");
+						
+					case "H_OK":
+						return TString.create("HTTP/1.1 200 OK\r\n");
+					case "H_HTTP":
+						return TString.create("Content-Type: text/html\r\n");
+					case "H_SERVER":
+						return TString.create("Server: arclang HTTP\r\n");
+					case "H_LENGTH":
+						return TString.create("<LENGTH>");
 				}
 				return null;
 			default:

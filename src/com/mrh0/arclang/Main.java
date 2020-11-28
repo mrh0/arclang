@@ -8,12 +8,13 @@ import com.mrh0.arclang.exception.ArcException;
 
 public class Main {
 
-	public static void main(String[] args) throws ArcException {
+	public static void main(String[] args) throws Exception {
 		// File path to evaluate.
 		String code = fromFile(args.length > 1 ? args[1] : "C:\\MRHLang\\arclang.arc");
 		System.out.println(code);
 		
-		ArcLang.SystemsTest(code);
+		//ArcLang.SystemsTest(code);
+		ArcLang.RoutesTest(code);	
 	}
 	
 	public static String fromFile(String path) {

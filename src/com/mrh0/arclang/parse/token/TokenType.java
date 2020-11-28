@@ -11,6 +11,7 @@ public enum TokenType {
 	OP_KW,
 	OP_SHORT,
 	END,
+	D_END,
 	LN,
 	BLOCK,
 	VAL

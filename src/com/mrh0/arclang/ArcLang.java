@@ -2,13 +2,13 @@ package com.mrh0.arclang;
 
 import java.util.List;
 import com.mrh0.arclang.evaluate.Evalizer;
-import com.mrh0.arclang.evaluate.StatementResult;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.parse.statement.StatementBlock;
 import com.mrh0.arclang.parse.statement.Statementizer;
 import com.mrh0.arclang.parse.token.Token;
 import com.mrh0.arclang.parse.token.Tokenizer;
-import com.mrh0.arclang.vm.Context;
+import com.mrh0.arclang.service.WebServer;
+import com.mrh0.arclang.service.route.HttpRouteService;
 import com.mrh0.arclang.vm.VM;
 
 public class ArcLang {
@@ -28,8 +28,18 @@ public class ArcLang {
 			
 			Evalizer.evalStatement(block, vm);
 		}
-		catch(ArcException e) {
-			System.err.println(e.getMessage().replaceAll("<#LINE>", ""+vm.exceptionManager.currentLine));
+		catch(Exception e) {
+			String m = e.getMessage();
+			if(m != null && e instanceof ArcException)
+				System.err.println(m.replaceAll("<#LINE>", ""+vm.exceptionManager.currentLine));
+			else {
+				System.err.print("[PANIC@"+(vm.exceptionManager.currentLine > 0 ? vm.exceptionManager.currentLine : "UNKNOWN")+"]: ");
+				e.printStackTrace();
+			}
 		}
+	}
+	
+	public static void RoutesTest(String code) throws Exception {
+		new WebServer().serve(80, new HttpRouteService().load(code));
 	}
 }

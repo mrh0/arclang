@@ -6,6 +6,7 @@ import java.util.List;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.parse.token.IToken;
 import com.mrh0.arclang.parse.token.Token;
+import com.mrh0.arclang.parse.token.TokenType;
 import com.mrh0.arclang.parse.token.TokenVal;
 import com.mrh0.arclang.parse.token.Tokens;
 import com.mrh0.arclang.type.IVal;
@@ -29,6 +30,7 @@ public class Statementizer {
 		List<IStatement> r = new ArrayList<IStatement>();
 		List<IToken> sl = new ArrayList<IToken>();
 		//boolean hasEndedBlock = false;
+		
 		while(i < t.size()) {
 			Token token = t.get(i++);
 			if(token.isStatementEnd()) {
@@ -51,13 +53,17 @@ public class Statementizer {
 			else if(token.isBlockEnd()) {
 				break;
 			}
-			else {
-				IVal tv = Tokens.toValue(token);
-				if(tv != null) 
-					sl.add(new TokenVal(tv));
-				else
-					sl.add(token);
-			}
+			/*else if(token.getLabel().equals("else") || token.getLabel().equals("elseif")) {
+				sl.add(0, new Token(";", TokenType.END));
+				sl.add(0, new Token("end", TokenType.IDENT));
+			}*/
+			
+			IVal tv = Tokens.toValue(token);
+			if(tv != null) 
+				sl.add(new TokenVal(tv));
+			else
+				sl.add(token);
+			
 		}
 		return new StatementBlock(r.toArray(new IStatement[0]));
 	}

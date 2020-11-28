@@ -28,4 +28,9 @@ private static TUndefined instance = null;
 	public boolean booleanValue() {
 		return false;
 	}
+	
+	@Override
+		public String toString() {
+			return "undefined";
+		}
 }
