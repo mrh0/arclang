@@ -34,8 +34,8 @@ public class ArcLang {
 				System.err.println(m.replaceAll("<#LINE>", ""+vm.exceptionManager.currentLine));
 			else {
 				System.err.print("[PANIC@"+(vm.exceptionManager.currentLine > 0 ? vm.exceptionManager.currentLine : "UNKNOWN")+"]: ");
-				e.printStackTrace();
 			}
+			e.printStackTrace();
 		}
 	}
 	

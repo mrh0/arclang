@@ -18,6 +18,10 @@ public class TNumber implements IVal{
 	
 	@Override
 	public String getTypeName() {
+		return getName();
+	}
+	
+	public static String getName() {
 		return "number";
 	}
 	
@@ -31,8 +35,8 @@ public class TNumber implements IVal{
 	
 	public static TNumber from(IVal v) throws ArcException {
 		v = IVal.get(v);
-		if(!(v instanceof TNumber))
-			throw new CastException(v, "number");
+		if(!v.isNumber())
+			throw new CastException(v, getName());
 		return (TNumber) v;
 	}
 	
@@ -52,6 +56,14 @@ public class TNumber implements IVal{
 		return new TNumber(v);
 	}
 	
+	public static TNumber True() {
+		return new TNumber(true);
+	}
+	
+	public static TNumber False() {
+		return new TNumber(false);
+	}
+	
 	public static IVal fromString(String value) throws ArcException {
 		try {
 			return create(Double.parseDouble(value));
@@ -68,32 +80,37 @@ public class TNumber implements IVal{
 	
 	@Override
 	public IVal add(IVal v) throws ArcException {
-		if(v instanceof TNumber)
+		if(v.isNumber())
 			return TNumber.create(value + from(v).get());
-		if(v instanceof TString)
+		if(v.isString())
 			return TString.create(value + TString.from(v).getValue());
-		return TUndefined.getInstance();
+		throw new CastException(v, this);
 	}
 	
 	@Override
 	public IVal sub(IVal v) throws ArcException {
-		if(v instanceof TNumber)
+		if(v.isNumber())
 			return TNumber.create(value - from(v).get());
-		return TUndefined.getInstance();
+		throw new CastException(v, this);
 	}
 	
 	@Override
 	public IVal mul(IVal v) throws ArcException {
-		if(v instanceof TNumber)
+		if(v.isNumber())
 			return TNumber.create(value * from(v).get());
-		return TUndefined.getInstance();
+		throw new CastException(v, this);
 	}
 	
 	@Override
 	public IVal div(IVal v) throws ArcException {
-		if(v instanceof TNumber)
+		if(v.isNumber())
 			return TNumber.create(value / from(v).get());
-		return TUndefined.getInstance();
+		throw new CastException(v, this);
+	}
+	
+	@Override
+	public double getComparableValue() {
+		return get();
 	}
 	
 	@Override

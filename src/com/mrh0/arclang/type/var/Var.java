@@ -17,7 +17,7 @@ public class Var implements IVal {
 	
 	public Var(String name, IVal value) {
 		this.name = name;
-		this.value = value;
+		this.value = IVal.get(value);
 	}
 	
 	public String getName() {
@@ -55,6 +55,16 @@ public class Var implements IVal {
 	
 	public boolean isFunction() {
 		return value.isFunction();
+	}
+	
+	@Override
+	public boolean isIterable() {
+		return value.isIterable();
+	}
+	
+	@Override
+	public boolean isKeyIterable() {
+		return value.isKeyIterable();
 	}
 	
 	@Override
@@ -98,6 +108,41 @@ public class Var implements IVal {
 	}
 	
 	@Override
+	public IVal equals(IVal v) throws ArcException {
+		return value.equals(v);
+	}
+	
+	@Override
+	public IVal notEquals(IVal v) throws ArcException {
+		return value.notEquals(v);
+	}
+	
+	@Override
+	public IVal greaterThan(IVal v) throws ArcException {
+		return value.greaterThan(v);
+	}
+	
+	@Override
+	public IVal lessThan(IVal v) throws ArcException {
+		return value.lessThan(v);
+	}
+	
+	@Override
+	public IVal greaterThanOrEquals(IVal v) throws ArcException {
+		return value.greaterThanOrEquals(v);
+	}
+	
+	@Override
+	public IVal lessThanOrEquals(IVal v) throws ArcException {
+		return value.lessThanOrEquals(v);
+	}
+	
+	@Override
+	public double getComparableValue() {
+		return value.getComparableValue();
+	}
+	
+	@Override
 	public IVal logicalAnd(IVal v) throws ArcException {
 		return value.logicalAnd(v);
 	}
@@ -124,7 +169,7 @@ public class Var implements IVal {
 	
 	@Override
 	public IVal assign(IVal v, Variables vars) throws ArcException {
-		this.value = v;
+		this.value = IVal.get(v);
 		vars.set(this);
 		return this;
 	}

@@ -156,7 +156,19 @@ public class Evalizer {
 				return left.logicalOr(right);
 			case "xor":
 				return left.logicalXor(right);
-				
+			
+			case ">":
+				return left.greaterThan(right);
+			case "<":
+				return left.lessThan(right);
+			case ">=":
+				return left.greaterThanOrEquals(right);
+			case "<=":
+				return left.lessThanOrEquals(right);
+			case "==":
+				return left.equals(right);
+			case "!=":
+				return left.notEquals(right);
 			case "=":
 				return left.assign(right, getAssignVariables(vm, con));
 			case ":=":

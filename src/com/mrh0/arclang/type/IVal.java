@@ -80,6 +80,34 @@ public interface IVal {
 		throw new OperationException("is", this, v);
 	}
 	
+	public default IVal greaterThan(IVal v) throws ArcException {
+		return TNumber.create(getComparableValue() > v.getComparableValue());
+	}
+	
+	public default IVal lessThan(IVal v) throws ArcException {
+		return TNumber.create(getComparableValue() < v.getComparableValue());
+	}
+	
+	public default IVal equals(IVal v) throws ArcException {
+		return TNumber.create(getComparableValue() == v.getComparableValue());
+	}
+	
+	public default IVal notEquals(IVal v) throws ArcException {
+		return TNumber.create(!equals(v).booleanValue());
+	}
+	
+	public default IVal greaterThanOrEquals(IVal v) throws ArcException {
+		return TNumber.create(getComparableValue() >= v.getComparableValue());
+	}
+	
+	public default IVal lessThanOrEquals(IVal v) throws ArcException {
+		return TNumber.create(getComparableValue() <= v.getComparableValue());
+	}
+	
+	public default double getComparableValue() {
+		return hashCode();
+	}
+	
 	public default IVal assign(IVal v, Variables vars) throws ArcException {
 		throw new OperationException("assign", this, v);
 	}
