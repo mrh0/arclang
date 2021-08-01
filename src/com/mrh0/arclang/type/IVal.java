@@ -1,10 +1,12 @@
 package com.mrh0.arclang.type;
 
-import com.mrh0.arclang.exception.AccessorException;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.OperationException;
 import com.mrh0.arclang.exception.ParseException;
+import com.mrh0.arclang.exception.accessor.AccessorTypeException;
 import com.mrh0.arclang.type.var.Var;
+import com.mrh0.arclang.vm.Context;
+import com.mrh0.arclang.vm.VM;
 import com.mrh0.arclang.vm.Variables;
 
 public interface IVal {
@@ -116,6 +118,30 @@ public interface IVal {
 		throw new OperationException("walrus", this, v);
 	}
 	
+	public default IVal addAssign(IVal v, Variables vars) throws ArcException {
+		return this.assign(this.add(v), vars);
+	}
+	
+	public default IVal subAssign(IVal v, Variables vars) throws ArcException {
+		return this.assign(this.sub(v), vars);
+	}
+	
+	public default IVal mulAssign(IVal v, Variables vars) throws ArcException {
+		return this.assign(this.mul(v), vars);
+	}
+	
+	public default IVal divAssign(IVal v, Variables vars) throws ArcException {
+		return this.assign(this.div(v), vars);
+	}
+	
+	public default IVal modAssign(IVal v, Variables vars) throws ArcException {
+		return this.assign(this.mod(v), vars);
+	}
+	
+	public default IVal powAssign(IVal v, Variables vars) throws ArcException {
+		return this.assign(this.pow(v), vars);
+	}
+	
 	public default IVal logicalAnd(IVal v) throws ArcException {
 		return TNumber.create(this.booleanValue() && v.booleanValue());
 	}
@@ -136,8 +162,8 @@ public interface IVal {
 		throw new ParseException(value);
 	}
 	
-	public default IVal accessor(IVal key) throws ArcException {
-		throw new AccessorException(this);
+	public default IVal accessor(IVal key, VM vm, Context context) throws ArcException {
+		throw new AccessorTypeException(this);
 	}
 	
 	public static IVal get(IVal val) {

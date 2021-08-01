@@ -3,6 +3,8 @@ package com.mrh0.arclang.type.var;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.type.TUndefined;
+import com.mrh0.arclang.vm.Context;
+import com.mrh0.arclang.vm.VM;
 import com.mrh0.arclang.vm.Variables;
 
 public class Var implements IVal {
@@ -163,12 +165,19 @@ public class Var implements IVal {
 	}
 	
 	@Override
-	public IVal accessor(IVal key) throws ArcException {
-		return value.accessor(key);
+	public IVal accessor(IVal key, VM vm, Context context) throws ArcException {
+		return value.accessor(key, vm, context);
 	}
 	
 	@Override
 	public IVal assign(IVal v, Variables vars) throws ArcException {
+		this.value = IVal.get(v);
+		//vars.set(this);
+		return this;
+	}
+	
+	@Override
+	public IVal walrusAssign(IVal v, Variables vars) throws ArcException {
 		this.value = IVal.get(v);
 		vars.set(this);
 		return this;

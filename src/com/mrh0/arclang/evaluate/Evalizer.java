@@ -6,21 +6,23 @@ import java.util.Stack;
 
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.AssertionException;
+import com.mrh0.arclang.exception.ExecutionStackNotEmptyException;
+import com.mrh0.arclang.exception.SyntaxException;
 import com.mrh0.arclang.parse.statement.IStatement;
 import com.mrh0.arclang.parse.statement.Statement;
 import com.mrh0.arclang.parse.statement.StatementBlock;
 import com.mrh0.arclang.parse.token.IToken;
 import com.mrh0.arclang.parse.token.Token;
 import com.mrh0.arclang.parse.token.TokenVal;
+import com.mrh0.arclang.parse.token.TokenVarCache;
 import com.mrh0.arclang.service.HttpMethod;
-import com.mrh0.arclang.service.route.HttpRouteService;
-import com.mrh0.arclang.service.route.RouteTree;
 import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.type.TList;
 import com.mrh0.arclang.type.TString;
 import com.mrh0.arclang.type.TUndefined;
 import com.mrh0.arclang.type.func.TFunc;
 import com.mrh0.arclang.type.func.TRoute;
+import com.mrh0.arclang.type.var.Var;
 import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.Context.ChainControl;
 import com.mrh0.arclang.vm.VM;
@@ -28,15 +30,15 @@ import com.mrh0.arclang.vm.Variables;
 
 public class Evalizer {
 	
-	public static StatementResult evalStatement(IStatement statement, VM vm) throws ArcException {
+	public static IVal evalStatement(IStatement statement, VM vm) throws ArcException {
 		return evalStatement(statement, vm, new Context(), null, null);
 	}
 	
-	public static StatementResult evalRootStatement(IStatement statement, VM vm) throws ArcException {
+	public static IVal evalRootStatement(IStatement statement, VM vm) throws ArcException {
 		return evalStatement(statement, vm, new Context(true), null, null);
 	}
 	
-	public static StatementResult evalStatement(IStatement statement, VM vm, Context con, StatementResult last, IStatement next) throws ArcException {
+	public static IVal evalStatement(IStatement statement, VM vm, Context con, IVal last/*StatementResult last*/, IStatement next) throws ArcException {
 		// Eval block.
 		if(statement instanceof StatementBlock) {
 			IStatement[] list = ((StatementBlock)statement).getStatements();
@@ -49,12 +51,9 @@ public class Evalizer {
 				return null;
 			
 			con.chain = ChainControl.IGNORE;
-			//con.usesBlock = false;
-			
-			
 			
 			for(int i = 0; i < list.length; i++) {
-				evalStatement(list[i], vm, con, new StatementResult(), (i+1 < list.length ? list[i+1] : null));
+				evalStatement(list[i], vm, con, TUndefined.getInstance(), (i+1 < list.length ? list[i+1] : null));
 			}
 			
 			con.chain = tchain;
@@ -81,7 +80,15 @@ public class Evalizer {
 				case END:
 					break;
 				case IDENT:
-					vm.stack.push(con.local.getOrDefault(t.getLabel(), vm.globals));
+					// No notable performance gain :/
+					if(t.getValue() == null) {
+						Var v = con.local.getOrDefault(t.getLabel(), vm.globals);
+						vm.stack.push(v);
+						c.setToken(i, new TokenVarCache(t, v));
+						//System.out.println("Cache:" + t.getLabel());
+						break;
+					}
+					vm.stack.push(t.getValue());
 					break;
 				case KW:
 					if(keyword(t, vm, con, next))
@@ -117,14 +124,19 @@ public class Evalizer {
 			}
 			lt = t;
 		}
-		
 		if(vm.stack.isEmpty()) {
 			vm.debug();
-			return new StatementResult(TUndefined.getInstance());
+			return TUndefined.getInstance();// StatementResult();
 		}
+		
 		IVal result = vm.stack.pop();
+		if(result instanceof Var)
+			getAssignVariables(vm, con).set((Var) result);
+		
+		if(vm.stack.size() > 0)
+			throw new ExecutionStackNotEmptyException(vm.stack.size());
 		vm.debug();
-		return new StatementResult(result);
+		return result;//new StatementResult(result);
 	}
 	
 	public static IVal operate(IToken op, IVal left, VM vm, Context con) throws ArcException {
@@ -134,7 +146,7 @@ public class Evalizer {
 			case "not":
 				return left.logicalNot();
 		}
-		return null;
+		throw new SyntaxException("operator", op.getLabel());
 	}
 	
 	public static IVal operate(IToken op, IVal right, IVal left, VM vm, Context con) throws ArcException {
@@ -172,29 +184,48 @@ public class Evalizer {
 			case "=":
 				return left.assign(right, getAssignVariables(vm, con));
 			case ":=":
-				return left.walrusAssign(right, getAssignVariables(vm, con)); //Indev
+				return left.walrusAssign(right, getAssignVariables(vm, con));
+			case "+=":
+				return left.addAssign(right, getAssignVariables(vm, con));
+			case "-=":
+				return left.subAssign(right, getAssignVariables(vm, con));
+			case "*=":
+				return left.mulAssign(right, getAssignVariables(vm, con));
+			case "/=":
+				return left.divAssign(right, getAssignVariables(vm, con));
+			case "%=":
+				return left.modAssign(right, getAssignVariables(vm, con));
+			case "^=":
+				return left.powAssign(right, getAssignVariables(vm, con));
 				
 			case "#":
-				return left.accessor(right);
+				return left.accessor(right, vm, con);
 		}
-		return null;
+		throw new SyntaxException("operator", op.getLabel());
 	}
 	
 	public static boolean keyword(IToken kw, VM vm, Context con, IStatement next) throws ArcException {
 		switch(kw.getLabel()) {
 			case "log":
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("value");
 				System.out.println("[Log:"+vm.exceptionManager.currentLine+"]:" + vm.stack.peek());
 				break;
 			case "assert":
-				if(!vm.stack.pop().booleanValue()) {
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("boolean assertion");
+				if(!vm.stack.pop().booleanValue())
 					throw new AssertionException(vm.exceptionManager.getLine());
-				}
 				break;
 			case "out":
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("value");
 				con.out.print(vm.stack.peek());
 				break;
 				
 			case "if":
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("boolean branch condition");
 				con.usesBlock = true;
 				if(vm.stack.pop().booleanValue())
 					con.chain = ChainControl.CONSUME;
@@ -207,11 +238,15 @@ public class Evalizer {
 					con.chain = ChainControl.CONSUME;
 				break;
 			case "elseif":
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("boolean branch condition");
 				con.usesBlock = true;
 				if(vm.stack.pop().booleanValue() && con.chain == ChainControl.PASS)
 					con.chain = ChainControl.CONSUME;
 				break;
 			case "while":
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("boolean loop condition");
 				if(vm.stack.pop().booleanValue()) {
 					evalStatement(next, vm, con, null, null);
 					con.chain = ChainControl.IGNORE;
@@ -231,7 +266,9 @@ public class Evalizer {
 			case "func":
 				con.chain = ChainControl.IGNORE;
 				IVal args = vm.stack.pop();
-				vm.stack.pop().assign(new TFunc(next), getAssignVariables(vm, con));
+				if(!(args instanceof TList))
+					throw new SyntaxException("arguments", args.getTypeName());
+				vm.stack.pop().walrusAssign(new TFunc(next), getAssignVariables(vm, con));
 				break;
 				
 			case "route":

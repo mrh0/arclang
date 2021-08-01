@@ -21,8 +21,6 @@ public class VM {
 	}
 	
 	public void debug() throws ArcException {
-		if(stack.size() > 0) {
-			throw new ExecutionStackNotEmptyException(stack.size());
-		}
+		
 	}
 }

@@ -220,6 +220,18 @@ public class Tokens {
 			case "is":
 				return 3;
 			
+			case "+=":
+				return 0;
+			case "-=":
+				return 0;
+			case "*=":
+				return 0;
+			case "/=":
+				return 0;
+			case "%=":
+				return 0;
+			case "^=":
+				return 0;
 			case "=":
 				return 0;
 			case ":=":

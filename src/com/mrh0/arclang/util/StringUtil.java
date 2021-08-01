@@ -28,6 +28,21 @@ public class StringUtil {
 		return r.toString();
 	}
 	
+	public static String arrayToString(String start, int[] arr, String end, String sep, String last) {
+		StringBuilder r = new StringBuilder();
+		r.append(start);
+		for(int i = 0; i < arr.length; i++) {
+			r.append(arr[i]);
+			
+			if(i+1 < arr.length)
+				r.append(sep);
+			if(i+2 == arr.length)
+				r.append(last);
+		}
+		r.append(end);
+		return r.toString();
+	}
+	
 	public static String arrayToString(String start, Iterable<?> iterable, String end, String sep) {
 		StringBuilder r = new StringBuilder();
 		r.append(start);
@@ -51,6 +66,14 @@ public class StringUtil {
 	
 	public static String arrayToString(Object[] arr) {
 		return arrayToString("", arr, "", ", ");
+	}
+	
+	public static String arrayToString(Iterable<?> iterable) {
+		return arrayToString("", iterable, "", ", ");
+	}
+	
+	public static String arrayToString(int[] arr, String last) {
+		return arrayToString("", arr, "", ", ", last+" ");
 	}
 	
 	public static String push(String s, char c) {

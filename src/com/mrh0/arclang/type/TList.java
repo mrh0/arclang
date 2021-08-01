@@ -5,6 +5,10 @@ import java.util.Iterator;
 import java.util.List;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.CastException;
+import com.mrh0.arclang.exception.EscapeCharacterException;
+import com.mrh0.arclang.exception.accessor.AccessorArgumentException;
+import com.mrh0.arclang.vm.Context;
+import com.mrh0.arclang.vm.VM;
 
 public class TList implements IVal, Iterable<IVal> {
 	private final List<IVal> list;
@@ -15,6 +19,12 @@ public class TList implements IVal, Iterable<IVal> {
 	
 	public TList(List<IVal> list) {
 		this.list = list;
+	}
+	
+	public TList(String[] list) throws EscapeCharacterException {
+		this.list = new ArrayList<IVal>();
+		for(String s : list)
+			this.list.add(TString.create(s));
 	}
 	
 	public TList(IVal...list) {
@@ -51,7 +61,7 @@ public class TList implements IVal, Iterable<IVal> {
 	}
 	
 	@Override
-	public IVal accessor(IVal key) throws ArcException {
+	public IVal accessor(IVal key, VM vm, Context context) throws ArcException {
 		if(key.isNumber())
 			return get(TNumber.from(key).getIntegerValue());
 		
@@ -104,7 +114,7 @@ public class TList implements IVal, Iterable<IVal> {
 				return a;
 			}
 		}
-		return TUndefined.getInstance();
+		throw new AccessorArgumentException(this, args.size(), 0, 1, 2);
 	}
 
 	@Override

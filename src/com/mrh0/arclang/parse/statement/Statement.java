@@ -22,6 +22,10 @@ public class Statement implements IStatement {
 		return tokens[i];
 	}
 	
+	public void setToken(int i, IToken t) {
+		tokens[i] = t;
+	}
+	
 	public int length() {
 		return tokens.length;
 	}

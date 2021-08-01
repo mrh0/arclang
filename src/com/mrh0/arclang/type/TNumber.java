@@ -3,10 +3,11 @@ package com.mrh0.arclang.type;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.CastException;
 import com.mrh0.arclang.exception.ParseException;
+import com.mrh0.arclang.vm.Variables;
 
 public class TNumber implements IVal{
 
-	private final double value;
+	private double value;
 	
 	private TNumber(double v) {
 		this.value = v;
@@ -80,6 +81,13 @@ public class TNumber implements IVal{
 	
 	@Override
 	public IVal add(IVal v) throws ArcException {
+		/*if(v.isNumber()) {
+			value += from(v).get();
+			return this;
+		}
+		if(v.isString())
+			return TString.create(value + TString.from(v).getValue());*/
+		
 		if(v.isNumber())
 			return TNumber.create(value + from(v).get());
 		if(v.isString())
@@ -121,5 +129,9 @@ public class TNumber implements IVal{
 	@Override
 	public boolean isNumber() {
 		return true;
+	}
+	
+	public boolean equals(double num) {
+		return value == num;
 	}
 }

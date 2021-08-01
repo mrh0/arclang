@@ -1,13 +1,14 @@
 package com.mrh0.arclang.parse.token;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.ExceptionManager.ExecutionPhase;
 import com.mrh0.arclang.exception.UnexpectedSymbolException;
-import com.mrh0.arclang.util.StringUtil;
 import com.mrh0.arclang.vm.VM;
 
 public class Tokenizer {
@@ -22,6 +23,8 @@ public class Tokenizer {
 	
 	private List<Integer> lineIndecies = new ArrayList<Integer>();
 	
+	private Map<String, Integer> identifierMap;
+	
 	private final VM vm;
 	
 	public Tokenizer(VM vm) {
@@ -29,10 +32,14 @@ public class Tokenizer {
 	}
 	
 	public List<Token> tokenize(String code) throws ArcException {
+		return tokenize(code, new HashMap<>());
+	}
+	
+	public List<Token> tokenize(String code, Map<String, Integer> identifierMap) throws ArcException {
 		vm.exceptionManager.setPhase(ExecutionPhase.PARSE);
 		vm.exceptionManager.setCode(code, lineIndecies);
+		this.identifierMap = identifierMap;
 		code = preprocess(code);
-		
 		for(int i = 0; i < code.length(); i++)
 			classify(code.charAt(i));
 		

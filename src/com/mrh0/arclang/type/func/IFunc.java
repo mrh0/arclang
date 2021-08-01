@@ -7,7 +7,7 @@ import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.VM;
 
 public interface IFunc extends IVal{
-	public StatementResult execute(Arguments args, VM vm, Context context) throws ArcException;
+	public IVal execute(Arguments args, VM vm, Context context) throws ArcException;
 	
 	@Override
 	public default boolean isFunction() {

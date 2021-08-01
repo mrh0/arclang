@@ -1,7 +1,5 @@
 package com.mrh0.arclang.vm;
 
-import java.io.PrintStream;
-
 import com.mrh0.arclang.io.IOutputFunction;
 import com.mrh0.arclang.io.StandardOutput;
 

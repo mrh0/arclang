@@ -5,6 +5,7 @@ import com.mrh0.arclang.evaluate.StatementResult;
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.parse.statement.IStatement;
 import com.mrh0.arclang.service.HttpMethod;
+import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.VM;
 
@@ -24,7 +25,7 @@ public class TRoute implements IFunc {
 	}
 
 	@Override
-	public StatementResult execute(Arguments args, VM vm, Context context) throws ArcException {
+	public IVal execute(Arguments args, VM vm, Context context) throws ArcException {
 		return Evalizer.evalStatement(first, vm, context, null, null);
 	}
 	

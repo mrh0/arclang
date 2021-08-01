@@ -91,4 +91,14 @@ public class TString implements IVal{
 	public IVal add(IVal v) throws ArcException {
 		return create(value+v.toString());
 	}
+	
+	@Override
+	public IVal div(IVal v) throws ArcException {
+		String split = TString.stringFrom(v);
+		return new TList(value.split(split));
+	}
+	
+	public boolean equals(String str) {
+		return value.equals(str);
+	}
 }
