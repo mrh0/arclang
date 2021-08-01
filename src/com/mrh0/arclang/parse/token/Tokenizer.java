@@ -153,12 +153,18 @@ public class Tokenizer {
 			return;
 		}
 		else if(Tokens.isOp(c)) {
-			if(t != TokenType.OP)
+			if(t != TokenType.OP || c == '-')
 				end();
 			push(TokenType.OP, c);
 			return;
 		}
 		else if(t == TokenType.OP) {
+			if(Tokens.isNumber(c)) {
+				if(s.toString().equals("-")) {
+					push(TokenType.NUM, c);
+					return;
+				}
+			}
 			end();
 		}
 		else if(t == TokenType.IDENT) {
@@ -339,6 +345,24 @@ public class Tokenizer {
 					postfix.remove(i-1);
 					i++;
 				}
+			}
+			else if(t.getLabel().equals(".")) {
+				String nl = ".";
+				if(i+1 >= postfix.size())
+					throw new UnexpectedSymbolException(t);
+				if(i-1>=0 && postfix.get(i-1).isNumber()) {
+					nl+=postfix.get(i-1).label;
+					postfix.remove(i-1);
+					i--;
+				}
+				if(i-1>=0 && postfix.get(i-1).isNumber()) {
+					nl=postfix.get(i-1).label+nl;
+					postfix.remove(i-1);
+					i--;
+				}
+				if(nl.equals("."))
+					throw new UnexpectedSymbolException(t);
+				postfix.set(i, new Token(nl, TokenType.NUM));
 			}
 		}
 	}

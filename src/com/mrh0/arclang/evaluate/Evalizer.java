@@ -18,10 +18,12 @@ import com.mrh0.arclang.parse.token.TokenVarCache;
 import com.mrh0.arclang.service.HttpMethod;
 import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.type.TList;
+import com.mrh0.arclang.type.TNumber;
 import com.mrh0.arclang.type.TString;
 import com.mrh0.arclang.type.TUndefined;
 import com.mrh0.arclang.type.func.TFunc;
 import com.mrh0.arclang.type.func.TRoute;
+import com.mrh0.arclang.type.iter.TRangeIterator;
 import com.mrh0.arclang.type.var.Var;
 import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.Context.ChainControl;
@@ -197,6 +199,8 @@ public class Evalizer {
 				return left.modAssign(right, getAssignVariables(vm, con));
 			case "^=":
 				return left.powAssign(right, getAssignVariables(vm, con));
+			case "..":
+				return TRangeIterator.create(TNumber.from(left).getIntegerValue(), TNumber.from(right).getIntegerValue());
 				
 			case "#":
 				return left.accessor(right, vm, con);

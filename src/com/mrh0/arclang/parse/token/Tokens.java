@@ -28,7 +28,7 @@ public class Tokens {
 	}
 	
 	public static boolean isNumber(char c) {
-		return c >= '0' && c <= '9' || c == '.';
+		return c >= '0' && c <= '9';// || c == '.';
 	}
 	
 	public static boolean isSep(char c) {
@@ -102,7 +102,7 @@ public class Tokens {
 				return true;
 			case "while":
 				return true;
-			case "iter":
+			case "for":
 				return true;
 			case "func":
 				return true;
@@ -140,6 +140,8 @@ public class Tokens {
 				return true;
 			case '#':
 				return true;
+			case '.':
+				return true;
 		}
 		return false;
 	}
@@ -171,8 +173,14 @@ public class Tokens {
 			case "(":
 				return -1000;
 				
+			case ".":
+				return 200;
+				
 			case "#":
 				return 100;
+				
+			case "..":
+				return 20;
 				
 			case "!":
 				return 11;

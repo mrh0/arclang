@@ -4,7 +4,7 @@ n3=0
 i=2
 count=1000
 
-rep = 10000000//00
+rep = 10//000000//00
 x = 0
 bench:
 	while x<rep:
@@ -19,3 +19,4 @@ bench:
 	end
 end
 
+log 0..-6
