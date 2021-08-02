@@ -1,6 +1,8 @@
 package com.mrh0.arclang.type.var;
 
 import com.mrh0.arclang.exception.ArcException;
+import com.mrh0.arclang.exception.ExpectationException;
+import com.mrh0.arclang.exception.UnexpectedSymbolException;
 import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.type.TUndefined;
 import com.mrh0.arclang.vm.Context;
@@ -161,15 +163,19 @@ public class Var implements IVal {
 	
 	@Override
 	public IVal assign(IVal v, Variables vars) throws ArcException {
-		this.value = IVal.get(v);
+		set(v);
 		//vars.set(this);
 		return this;
 	}
 	
 	@Override
 	public IVal walrusAssign(IVal v, Variables vars) throws ArcException {
-		this.value = IVal.get(v);
-		vars.set(this);
+		vars.set(set(v));
+		return this;
+	}
+	
+	public Var set(IVal value) {
+		this.value = IVal.get(value);
 		return this;
 	}
 	
@@ -181,5 +187,18 @@ public class Var implements IVal {
 	@Override
 	public boolean booleanValue() {
 		return value.booleanValue();
+	}
+	
+	public static Var from(IVal val) throws ExpectationException {
+		if(val instanceof Var)
+			return (Var)val;
+		throw new ExpectationException("variable");
+	}
+	
+	public static Var nonConstantFrom(IVal val) throws ExpectationException {
+		if((val instanceof Var) && !(val instanceof Constant)) {
+			return (Var)val;
+		}
+		throw new ExpectationException("variable");
 	}
 }

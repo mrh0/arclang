@@ -5,50 +5,50 @@ import java.util.Iterator;
 import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.type.TNumber;
 
-public class RangeIterable extends TIterable {
+public class TReverseRangeIterable extends TIterable {
 	private int from;
 	private int to;
-	public RangeIterable(int from, int to) {
+	public TReverseRangeIterable(int from, int to) {
 		this.from = from;
 		this.to = to;
 	}
-	
-	public class RangeIterator implements Iterator<IVal> {
+
+	public class ReverseRangeIterator implements Iterator<IVal> {
 		private int from;
 		private int to;
 		private int key;
 		
-		public RangeIterator(int from, int to) {
+		public ReverseRangeIterator(int from, int to) {
 			this.from = from;
 			this.to = to;
 			this.key = 0;
 		}
-		
+
 		@Override
 		public boolean hasNext() {
-			return from + key+1 < to;
+			return from-key > to;
 		}
 
 		@Override
 		public IVal next() {
-			return TNumber.create(from+key++);
+			return TNumber.create(from-key++);
 		}
 	}
 	
-	public class RangeKeyIterator implements Iterator<IVal> {
+	public class ReverseRangeKeyIterator implements Iterator<IVal> {
 		private int from;
 		private int to;
 		private int key;
 		
-		public RangeKeyIterator(int from, int to) {
+		public ReverseRangeKeyIterator(int from, int to) {
 			this.from = from;
 			this.to = to;
 			this.key = 0;
 		}
-		
+
 		@Override
 		public boolean hasNext() {
-			return from + key+1 < to;
+			return from - key > to;
 		}
 
 		@Override
@@ -59,18 +59,16 @@ public class RangeIterable extends TIterable {
 
 	@Override
 	public Iterator<IVal> keyIterator() {
-		return new RangeKeyIterator(from, to);
+		return new ReverseRangeKeyIterator(from, to);
 	}
 
 	@Override
 	public Iterator<IVal> iterator() {
-		return new RangeIterator(from, to);
+		return new ReverseRangeIterator(from, to);
 	}
 	
 	public static TIterable create(int from, int to) {
-		if(to >= from)
-			return new RangeIterable(from, to);
-		else
-			return new ReverseRangeIterable(from, to);
+		return TRangeIterable.create(from, to);
 	}
 }
+

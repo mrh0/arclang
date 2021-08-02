@@ -161,6 +161,10 @@ public class Tokens {
 				return true;
 			case "of":
 				return true;
+			case "as":
+				return true;
+			case "is":
+				return true;
 		}
 		return false;
 	}
@@ -222,6 +226,8 @@ public class Tokens {
 				return 2;
 				
 			case "in":
+				return 1;
+			case "of":
 				return 1;
 			case "as":
 				return 3;

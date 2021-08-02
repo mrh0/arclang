@@ -8,7 +8,8 @@ import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.AssertionException;
 import com.mrh0.arclang.exception.CastException;
 import com.mrh0.arclang.exception.ExecutionStackNotEmptyException;
-import com.mrh0.arclang.exception.SyntaxException;
+import com.mrh0.arclang.exception.ExpectationException;
+import com.mrh0.arclang.exception.UnexpectedSymbolException;
 import com.mrh0.arclang.parse.statement.IStatement;
 import com.mrh0.arclang.parse.statement.Statement;
 import com.mrh0.arclang.parse.statement.StatementBlock;
@@ -24,8 +25,10 @@ import com.mrh0.arclang.type.TString;
 import com.mrh0.arclang.type.TUndefined;
 import com.mrh0.arclang.type.func.TFunc;
 import com.mrh0.arclang.type.func.TRoute;
-import com.mrh0.arclang.type.iter.RangeIterable;
+import com.mrh0.arclang.type.iter.TRangeIterable;
 import com.mrh0.arclang.type.iter.TIterable;
+import com.mrh0.arclang.type.iter.TKeyIterable;
+import com.mrh0.arclang.type.iter.TValueIterable;
 import com.mrh0.arclang.type.var.Var;
 import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.Context.ChainControl;
@@ -150,7 +153,7 @@ public class Evalizer {
 			case "not":
 				return left.logicalNot();
 		}
-		throw new SyntaxException("operator", op.getLabel());
+		throw new UnexpectedSymbolException("operator", op.getLabel());
 	}
 	
 	public static IVal operate(IToken op, IVal right, IVal left, VM vm, Context con) throws ArcException {
@@ -202,36 +205,40 @@ public class Evalizer {
 			case "^=":
 				return left.powAssign(right, getAssignVariables(vm, con));
 			case "..":
-				return RangeIterable.create(TNumber.from(left).getIntegerValue(), TNumber.from(right).getIntegerValue());
+				return TRangeIterable.create(TNumber.from(left).getIntegerValue(), TNumber.from(right).getIntegerValue());
 				
+			case "in":
+				return new TValueIterable(Var.nonConstantFrom(left), TIterable.from(right));
+			case "of":
+				return new TKeyIterable(Var.nonConstantFrom(left), TIterable.from(right));
 			case "#":
 				return left.accessor(right, vm, con);
 		}
-		throw new SyntaxException("operator", op.getLabel());
+		throw new UnexpectedSymbolException("operator", op.getLabel());
 	}
 	
 	public static boolean keyword(IToken kw, VM vm, Context con, IStatement next) throws ArcException {
 		switch(kw.getLabel()) {
 			case "log":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("value");
+					throw new ExpectationException("value");
 				System.out.println("[Log:"+vm.exceptionManager.currentLine+"]:" + vm.stack.peek());
 				break;
 			case "assert":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("boolean assertion");
+					throw new ExpectationException("boolean assertion");
 				if(!vm.stack.pop().booleanValue())
 					throw new AssertionException(vm.exceptionManager.getLine());
 				break;
 			case "out":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("value");
+					throw new ExpectationException("value");
 				con.out.print(vm.stack.peek());
 				break;
 				
 			case "if":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("boolean branch condition");
+					throw new ExpectationException("boolean branch condition");
 				con.usesBlock = true;
 				if(vm.stack.pop().booleanValue())
 					con.chain = ChainControl.CONSUME;
@@ -245,14 +252,14 @@ public class Evalizer {
 				break;
 			case "elseif":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("boolean branch condition");
+					throw new ExpectationException("boolean branch condition");
 				con.usesBlock = true;
 				if(vm.stack.pop().booleanValue() && con.chain == ChainControl.PASS)
 					con.chain = ChainControl.CONSUME;
 				break;
 			case "while":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("boolean loop condition");
+					throw new ExpectationException("boolean loop condition");
 				if(vm.stack.pop().booleanValue()) {
 					evalStatement(next, vm, con, null, null);
 					con.chain = ChainControl.IGNORE;
@@ -263,13 +270,14 @@ public class Evalizer {
 				break;
 			case "for":
 				if(vm.stack.isEmpty())
-					throw new SyntaxException("iterator");
+					throw new ExpectationException("iterator");
 				IVal v = vm.stack.pop();
-
+				boolean didIterate = false;
 				for(IVal x : TIterable.from(v)) {
 					evalStatement(next, vm, con, null, null);
+					didIterate = true;
 				}
-				con.chain = ChainControl.CONSUME;
+				con.chain = didIterate ? ChainControl.IGNORE : ChainControl.PASS;
 				break;
 			case "bench":
 				long start = System.nanoTime();
@@ -282,7 +290,7 @@ public class Evalizer {
 				con.chain = ChainControl.IGNORE;
 				IVal args = vm.stack.pop();
 				if(!(args instanceof TList))
-					throw new SyntaxException("arguments", args.getTypeName());
+					throw new UnexpectedSymbolException("arguments", args.getTypeName());
 				vm.stack.pop().walrusAssign(new TFunc(next), getAssignVariables(vm, con));
 				break;
 				

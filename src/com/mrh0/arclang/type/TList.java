@@ -18,7 +18,9 @@ public class TList implements IVal, Iterable<IVal> {
 	}
 	
 	public TList(List<IVal> list) {
-		this.list = list;
+		this.list = new ArrayList<IVal>();
+		for(IVal val : list)
+			this.push(val);
 	}
 	
 	public TList(String[] list) throws EscapeCharacterException {
@@ -30,7 +32,7 @@ public class TList implements IVal, Iterable<IVal> {
 	public TList(IVal...list) {
 		this.list = new ArrayList<IVal>();
 		for(IVal v : list)
-			this.list.add(v);
+			this.push(v);
 	}
 
 	@Override
@@ -57,6 +59,10 @@ public class TList implements IVal, Iterable<IVal> {
 	}
 	
 	public void push(IVal val) {
+		list.add(IVal.get(val));
+	}
+	
+	public void pushVars(IVal val) {
 		list.add(val);
 	}
 	

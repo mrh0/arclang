@@ -5,28 +5,29 @@ import java.util.Iterator;
 import com.mrh0.arclang.type.IVal;
 import com.mrh0.arclang.type.TNumber;
 
-public class ReverseRangeIterable extends TIterable {
+public class TRangeIterable extends TIterable {
 	private int from;
 	private int to;
-	public ReverseRangeIterable(int from, int to) {
+	public TRangeIterable(int from, int to) {
 		this.from = from;
 		this.to = to;
 	}
-
-	public class ReverseRangeIterator implements Iterator<IVal> {
+	
+	public class RangeIterator implements Iterator<IVal> {
 		private int from;
 		private int to;
 		private int key;
 		
-		public ReverseRangeIterator(int from, int to) {
+		public RangeIterator(int from, int to) {
+			//System.out.println(from + ":" + to);
 			this.from = from;
 			this.to = to;
 			this.key = 0;
 		}
-
+		
 		@Override
 		public boolean hasNext() {
-			return from - key-1 > to;
+			return from + key < to;
 		}
 
 		@Override
@@ -35,40 +36,42 @@ public class ReverseRangeIterable extends TIterable {
 		}
 	}
 	
-	public class ReverseRangeKeyIterator implements Iterator<IVal> {
+	public class RangeKeyIterator implements Iterator<IVal> {
 		private int from;
 		private int to;
 		private int key;
 		
-		public ReverseRangeKeyIterator(int from, int to) {
+		public RangeKeyIterator(int from, int to) {
 			this.from = from;
 			this.to = to;
 			this.key = 0;
 		}
-
+		
 		@Override
 		public boolean hasNext() {
-			return from - key-1 > to;
+			return from + key < to;
 		}
 
 		@Override
 		public IVal next() {
-			return TNumber.create(key--);
+			return TNumber.create(key++);
 		}
 	}
 
 	@Override
 	public Iterator<IVal> keyIterator() {
-		return new ReverseRangeKeyIterator(from, to);
+		return new RangeKeyIterator(from, to);
 	}
 
 	@Override
 	public Iterator<IVal> iterator() {
-		return new ReverseRangeIterator(from, to);
+		return new RangeIterator(from, to);
 	}
 	
 	public static TIterable create(int from, int to) {
-		return RangeIterable.create(from, to);
+		if(to >= from)
+			return new TRangeIterable(from, to);
+		else
+			return new TReverseRangeIterable(from, to);
 	}
 }
-
