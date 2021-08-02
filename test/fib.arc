@@ -19,4 +19,5 @@ bench:
 	end
 end
 
-log 0..-6
+for 0..-6:
+	log "yo"

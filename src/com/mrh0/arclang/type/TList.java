@@ -72,7 +72,7 @@ public class TList implements IVal, Iterable<IVal> {
 			if(args.get(0).isNumber()) {
 				return get(TNumber.from(args.get(0)).getIntegerValue());
 			}
-			else if(args.get(0).isIterable()) {
+			else if(args.get(0) instanceof Iterable) {
 				TList a = new TList();
 				
 				@SuppressWarnings("unchecked")

@@ -6,6 +6,7 @@ import java.util.Stack;
 
 import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.AssertionException;
+import com.mrh0.arclang.exception.CastException;
 import com.mrh0.arclang.exception.ExecutionStackNotEmptyException;
 import com.mrh0.arclang.exception.SyntaxException;
 import com.mrh0.arclang.parse.statement.IStatement;
@@ -23,7 +24,8 @@ import com.mrh0.arclang.type.TString;
 import com.mrh0.arclang.type.TUndefined;
 import com.mrh0.arclang.type.func.TFunc;
 import com.mrh0.arclang.type.func.TRoute;
-import com.mrh0.arclang.type.iter.TRangeIterator;
+import com.mrh0.arclang.type.iter.RangeIterable;
+import com.mrh0.arclang.type.iter.TIterable;
 import com.mrh0.arclang.type.var.Var;
 import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.Context.ChainControl;
@@ -200,7 +202,7 @@ public class Evalizer {
 			case "^=":
 				return left.powAssign(right, getAssignVariables(vm, con));
 			case "..":
-				return TRangeIterator.create(TNumber.from(left).getIntegerValue(), TNumber.from(right).getIntegerValue());
+				return RangeIterable.create(TNumber.from(left).getIntegerValue(), TNumber.from(right).getIntegerValue());
 				
 			case "#":
 				return left.accessor(right, vm, con);
@@ -259,7 +261,16 @@ public class Evalizer {
 				else
 					con.chain = ChainControl.PASS;
 				break;
-				
+			case "for":
+				if(vm.stack.isEmpty())
+					throw new SyntaxException("iterator");
+				IVal v = vm.stack.pop();
+
+				for(IVal x : TIterable.from(v)) {
+					evalStatement(next, vm, con, null, null);
+				}
+				con.chain = ChainControl.CONSUME;
+				break;
 			case "bench":
 				long start = System.nanoTime();
 				evalStatement(next, vm, con, null, null);

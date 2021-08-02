@@ -60,16 +60,6 @@ public class Var implements IVal {
 	}
 	
 	@Override
-	public boolean isIterable() {
-		return value.isIterable();
-	}
-	
-	@Override
-	public boolean isKeyIterable() {
-		return value.isKeyIterable();
-	}
-	
-	@Override
 	public IVal add(IVal v) throws ArcException {
 		return value.add(v);
 	}
