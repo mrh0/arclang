@@ -4,7 +4,6 @@ import com.mrh0.arclang.exception.ArcException;
 import com.mrh0.arclang.exception.OperationException;
 import com.mrh0.arclang.exception.ParseException;
 import com.mrh0.arclang.exception.accessor.AccessorTypeException;
-import com.mrh0.arclang.type.iter.KeyIterable;
 import com.mrh0.arclang.type.var.Var;
 import com.mrh0.arclang.vm.Context;
 import com.mrh0.arclang.vm.VM;
